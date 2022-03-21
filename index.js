@@ -13,6 +13,7 @@ const auth = {login: process.env['mcuser'] || 'admin', password: process.env['mc
 const mc_port = process.env['mcport'] || 25565;
 const motd = process.env['mcmotd'] || "A Node Minecraft Server";
 const PORT = process.env['PORT'] || 8080;
+const ram = process.env['mcram'] || "1024";
 
 const setting = {
 	token: ngrok_token, 
@@ -111,7 +112,7 @@ function addConsole(socket){
 				break;
 			case "start":
 			    if(!isRun){
-					child = child_process.spawn("java", ["-Xms1024M", "-jar", "server.jar", "nogui"], {shell: true, cwd: __dirname + "/game"});
+					child = child_process.spawn("java", [`-Xms${ram}M`, "-jar", "server.jar", "nogui"], {shell: true, cwd: __dirname + "/game"});
 					getListener(socket)
 					startNgrok()
 					socket.emit("log", "Starting!..\r\n");
