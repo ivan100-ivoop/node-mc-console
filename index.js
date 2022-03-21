@@ -4,22 +4,23 @@ const app = express();
 const http = require('http').Server(app);
 const io = require('socket.io')(http);
 const child_process = require('child_process');
+ const path = require('path');
 const fs = require('fs');
 const ngrok = require('ngrok');
 
-const ngrok_token = process.env['token'] || "";
-const master = process.env['consoletoken'] || "123456789";
-const auth = {login: process.env['mcuser'] || 'admin', password: process.env['mcpass'] || 'admin'}
-const mc_port = process.env['mcport'] || 25565;
-const motd = process.env['mcmotd'] || "A Node Minecraft Server";
-const PORT = process.env['PORT'] || 8080;
-const ram = process.env['mcram'] || "1024";
+const ngrok_token = process.env['token'] || ""; // ngrok token 
+const master = process.env['consoletoken'] || "123456789"; // default token for web gui
+const auth = {login: process.env['mcuser'] || 'admin', password: process.env['mcpass'] || 'admin'} // default login arg for web gui
+const mc_port = process.env['mcport'] || 25565; // deflaut Run port 25655 on ngrok will be another
+const motd = process.env['mcmotd'] || "A Node Minecraft Server";  // delault motd of Minecraft server
+const PORT = process.env['PORT'] || 8080; // web GUI Port default 8080
+const ram = process.env['mcram'] || "1024";  //default ram use 1024MB => 1G
 
 const setting = {
 	token: ngrok_token, 
 	proto: 'tcp',
 	addr: mc_port,
-	region: 'eu'
+	region: 'eu' // default is europe if need change
 };
 
 let isRun = false, child, ngrok_ip = "";
@@ -246,5 +247,13 @@ app.get("/", (req, res)=>{
 });
 
 const server = http.listen(PORT, () => {
+	 if(!fs.existsSync(__dirname + "/game")){
+		fs.mkdir(path.join(__dirname, 'game'), (err) => {
+		    if (err) {
+			return console.error(err);
+		    }
+		    console.log('Directory created successfully!');
+		});
+	 }
 	console.log(`Listening on port ${PORT}`);
 });
