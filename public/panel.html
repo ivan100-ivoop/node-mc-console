@@ -1,0 +1,62 @@
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta charset="utf-8">
+<script src="/token"></script>
+<script type="text/javascript" src="js/jquery.min.js"></script>
+<script src="socket.io/socket.io.js"></script>
+<h2>CONNECT: <label id="ip"></label></h2>
+<textarea style="height: 50%; width: 100%; background-color: black; color: green;" disabled id="log"></textarea></br>
+<p>
+<button style="width: 15%; height: 10%;" data-command="download">Download Spigot 1.12.2</button>
+<button style="width: 10%; height: 10%;" data-command="setup">Setup</button>
+<p>
+<button style="width: 10%; height: 10%;" data-command="start">Start</button>
+<button style="width: 10%; height: 10%;" data-command="stop">Stop</button>
+</p>
+<p>
+<input style="width: 80%; height: 10%;" type="text" placeholder="Command" id="cmd"/>
+<button style="width: 10%; height: 10%;" data-command="send" >Send</button>
+</p>
+</p>
+<script type="text/javascript">
+	const socket = io();
+
+	socket.on("connect",function(){
+		socket.emit('login', token);
+		setInterval(function(){
+			socket.emit('console', 'status');
+		}, 3000);
+	})
+	socket.on("log",function(data){
+        $("#log").val($("#log").val() + data);
+        $('#log').scrollTop($('#log')[0].scrollHeight + 5);
+    })
+
+    socket.on("status",function(data){
+    	if(data.clear && !data.run){
+    		$('#log').val("");
+    	}
+    	$("#ip").text(data.ip);
+    })
+
+	$("button").click(function(){
+		var cmd = $(this).attr("data-command");
+		if(cmd != "send"){
+			socket.emit('console', $(this).attr("data-command"));
+		}else{
+			sendCMD();
+		}
+	})
+	$('#cmd').keypress(function(event){
+	    var keycode = (event.keyCode ? event.keyCode : event.which);
+	    if(keycode == '13'){
+	    	sendCMD();
+	    }
+	});
+	function sendCMD(){
+		var message = $('#cmd').val();
+		if(message != ""){
+			socket.emit('console', message);
+			$('#cmd').val("");
+		}
+	}
+</script>
