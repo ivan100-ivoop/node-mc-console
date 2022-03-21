@@ -29,6 +29,21 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({extended: false}))
 app.use("/", express.static(__dirname + '/static'));
 
+const download = function(url, dest, socket) {
+  var file = fs.createWriteStream(dest);
+  require('https').get(url, function(response) {
+    socket.emit("log", "Downloading!..\r\n");
+    response.pipe(file);
+    file.on('finish', function() {
+      socket.emit("log", "Finish Download!..\r\n");
+      file.close();
+    });
+    file.on('error', (err) => {
+       socket.emit("log", "Error Downloading!..\r\n");
+       socket.emit("log", `${err.message}\r\n`);
+    });
+  });
+}
 
 function grand_eula(){
 	fs.appendFileSync("game/eula.txt", '#By changing the setting below to TRUE you are indicating your agreement to our EULA (https://account.mojang.com/documents/minecraft_eula).\r\n')
@@ -105,10 +120,9 @@ function addConsole(socket){
 		switch(msg){
 			case "download":
 			    if(!fs.existsSync(__dirname + "/game/server.jar")){
-				    child = child_process.spawn("wget", ["-O", __dirname + "/game/server.jar", "https://cdn.getbukkit.org/spigot/spigot-1.12.2.jar"], {shell: true, cwd: __dirname + "/game"});
-					getDListener(socket);
+				    download("https://cdn.getbukkit.org/spigot/spigot-1.12.2.jar", __dirname + "/game/server.jar", socket)
 				}else{
-					socket.emit("log", "Server is Exists!..\r\n");
+				     socket.emit("log", "Server is Exists!..\r\n");
 				}
 				break;
 			case "start":
@@ -184,35 +198,6 @@ function getListener(socket){
 		socket.emit("log", "Stopped!..\r\n");
 	});
 }
-
-function getDListener(socket){
-	child.stdout.setEncoding('utf8');
-	child.stdout.on('data', function(data) {
-	    data=data.toString();
-	    if(data.includes('\r\n')){
-	    	socket.emit("log", data);
-	    }else{
-	    	socket.emit("log", data + '\r\n');
-	    }
-	});
-
-	child.stderr.setEncoding('utf8');
-	child.stderr.on('data', function(data) {
-		data=data.toString();
-	    if(data.includes('\r\n')){
-	    	socket.emit("log", data);
-	    }else{
-	    	socket.emit("log", data + '\r\n');
-	    }
-	});
-	child.on('error', (error) => {
-	    socket.emit("log", error.message + '\r\n');
-	});
-	child.on('close', function(code) {
-		socket.emit("log", "Stopped!..\r\n");
-	});
-}
-
 app.get("/token", (req, res)=>{
 	if (!req.headers.authorization) {
 		res.redirect("/");
